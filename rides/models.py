@@ -63,3 +63,23 @@ class Ride(models.Model):
     
     def __str__(self):
         return f"Ride {self.pk}: {self.id_rider} -> {self.status}"
+
+class RideEvent(models.Model):
+    """
+    RideEvent model - represents events that occur during a ride.
+    """
+    id_ride = models.ForeignKey(
+        Ride,
+        on_delete=models.CASCADE,
+        related_name='ride_events',  # ride.ride_events.all()
+        db_column='id_ride'
+    )
+    description = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'ride_event'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Event for Ride {self.id_ride_id}: {self.description}"
