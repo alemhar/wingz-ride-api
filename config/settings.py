@@ -121,3 +121,32 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 AUTH_USER_MODEL = 'rides.User'
+
+REST_FRAMEWORK = {
+    # Authentication - who can access the API?
+    # SessionAuthentication: Uses Django's session (good for browsable API)
+    # BasicAuthentication: Username/password in headers (good for testing)
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    
+    # Default permission - require authenticated users
+    # Our ViewSets add IsAdminRole on top of this
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    
+    # Pagination - like Laravel's ->paginate(10)
+    # PageNumberPagination uses ?page=1, ?page=2, etc.
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+    
+    # Filter backends - enables ?status=pickup&ordering=-pickup_time
+    # DjangoFilterBackend: For exact/contains filters (like Spatie QueryBuilder allowedFilters)
+    # OrderingFilter: For sorting (like Spatie QueryBuilder allowedSorts)
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter',
+    ],
+}
