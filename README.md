@@ -20,10 +20,12 @@ A RESTful API for managing ride information built with Django REST Framework.
    python manage.py migrate
    ```
 
-4. Create admin user:
+4. Create admin user (use `admin` as username):
    ```bash
    python manage.py createsuperuser
+   # Use: admin / admin@example.com / your-password
    ```
+   > Note: The seeder will set the role to 'admin' for this user.
 
 5. Seed sample data:
    ```bash
