@@ -19,4 +19,7 @@ from django.urls import path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include('rides.urls')),  # All API routes under /api/
+
+    path('api-auth/', include('rest_framework.urls')),
 ]
