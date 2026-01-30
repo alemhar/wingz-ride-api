@@ -136,19 +136,6 @@ def trip_duration_report(request):
     Raw SQL report: Trips taking more than 1 hour, grouped by Month and Driver.
     """
 
-    # sql = """
-    # SELECT 
-    #     pickup_event.created_at as raw_pickup,
-    #     dropoff_event.created_at as raw_dropoff,
-    #     julianday(pickup_event.created_at) as julian_pickup,
-    #     julianday(dropoff_event.created_at) as julian_dropoff
-    # FROM ride r
-    # JOIN ride_event pickup_event ON pickup_event.id_ride = r.id AND pickup_event.description = 'Status changes to pickup'
-    # JOIN ride_event dropoff_event ON dropoff_event.id_ride = r.id AND dropoff_event.description = 'Status change to dropoff'
-    # -- No WHERE, No GROUP BY
-    # LIMIT 5
-    # """
-
     sql = """
     SELECT 
         strftime('%Y-%m', pickup_event.created_at) as month,
@@ -160,7 +147,10 @@ def trip_duration_report(request):
         AND pickup_event.description = 'Status changes to pickup'
     JOIN ride_event dropoff_event ON dropoff_event.id_ride = r.id 
         AND dropoff_event.description = 'Status change to dropoff'
-    WHERE (julianday(dropoff_event.created_at) - julianday(pickup_event.created_at)) * 24 > 1
+    WHERE (
+        strftime('%s', substr(replace(dropoff_event.created_at, 'T', ' '), 1, 19)) - 
+        strftime('%s', substr(replace(pickup_event.created_at, 'T', ' '), 1, 19))
+    ) > 3600
     GROUP BY month, driver
     ORDER BY month, driver
     """   

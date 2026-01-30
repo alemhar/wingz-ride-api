@@ -35,17 +35,21 @@ class Command(BaseCommand):
             base_time = timezone.now() - timedelta(days=2)
             
             # Pickup Event
-            RideEvent.objects.create(
+            # Note: RideEvent.created_at has auto_now_add=True, so we must
+            # update the field AFTER creation to set custom timestamps.
+            pickup_event = RideEvent.objects.create(
                 id_ride=ride,
                 description='Status changes to pickup',
-                created_at=base_time
             )
+            pickup_event.created_at = base_time
+            pickup_event.save(update_fields=['created_at'])
             
             # Dropoff Event: 3 HOURS later (Satisfies > 1h criteria)
-            RideEvent.objects.create(
+            dropoff_event = RideEvent.objects.create(
                 id_ride=ride,
                 description='Status change to dropoff',
-                created_at=base_time + timedelta(hours=3)
             )
+            dropoff_event.created_at = base_time + timedelta(hours=3)
+            dropoff_event.save(update_fields=['created_at'])
             
         self.stdout.write(self.style.SUCCESS('Seeded 5 long trips!'))
