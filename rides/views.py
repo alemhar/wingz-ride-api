@@ -19,6 +19,9 @@ from .serializers import (
 )
 from .permissions import IsAdminRole
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from django.db import connection
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -125,3 +128,49 @@ class RideEventViewSet(viewsets.ModelViewSet):
     queryset = RideEvent.objects.select_related('id_ride')
     serializer_class = RideEventSerializer
     permission_classes = [IsAuthenticated, IsAdminRole]
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdminRole])
+def trip_duration_report(request):
+    """
+    Raw SQL report: Trips taking more than 1 hour, grouped by Month and Driver.
+    """
+
+    # sql = """
+    # SELECT 
+    #     pickup_event.created_at as raw_pickup,
+    #     dropoff_event.created_at as raw_dropoff,
+    #     julianday(pickup_event.created_at) as julian_pickup,
+    #     julianday(dropoff_event.created_at) as julian_dropoff
+    # FROM ride r
+    # JOIN ride_event pickup_event ON pickup_event.id_ride = r.id AND pickup_event.description = 'Status changes to pickup'
+    # JOIN ride_event dropoff_event ON dropoff_event.id_ride = r.id AND dropoff_event.description = 'Status change to dropoff'
+    # -- No WHERE, No GROUP BY
+    # LIMIT 5
+    # """
+
+    sql = """
+    SELECT 
+        strftime('%Y-%m', pickup_event.created_at) as month,
+        u.first_name || ' ' || u.last_name as driver,
+        COUNT(*) as trip_count
+    FROM ride r
+    JOIN user u ON r.id_driver = u.id
+    JOIN ride_event pickup_event ON pickup_event.id_ride = r.id 
+        AND pickup_event.description = 'Status changes to pickup'
+    JOIN ride_event dropoff_event ON dropoff_event.id_ride = r.id 
+        AND dropoff_event.description = 'Status change to dropoff'
+    WHERE (julianday(dropoff_event.created_at) - julianday(pickup_event.created_at)) * 24 > 1
+    GROUP BY month, driver
+    ORDER BY month, driver
+    """   
+    
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+        columns = [col[0] for col in cursor.description]
+        rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    
+    return Response({
+        'report': 'Trips > 1 Hour by Month and Driver',
+        'data': rows
+    })

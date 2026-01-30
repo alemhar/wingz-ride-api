@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import UserViewSet, RideViewSet, RideEventViewSet
+from .views import trip_duration_report
 
 # DRF Router automatically creates all CRUD routes
 router = DefaultRouter()
@@ -10,4 +11,5 @@ router.register(r'ride-events', RideEventViewSet, basename='ride-event')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('reports/trip-duration/', trip_duration_report, name='trip-duration-report'),
 ]
